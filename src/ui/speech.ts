@@ -1,6 +1,6 @@
 /**
  * Voice typing, as a bonus. Uses the browser's own speech recognition where it exists
- * (Chrome, Edge, Safari) and does nothing at all where it doesn't. If it fails halfway,
+ * and does nothing at all where it doesn't. If it fails halfway,
  * it stops quietly and leaves whatever was already typed.
  */
 

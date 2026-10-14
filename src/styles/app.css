@@ -200,8 +200,11 @@ h1 {
   color: var(--chalk);
 }
 
+/* One page width for the header, the room and the footer. */
+.site-head,
+main,
 .site-foot {
-  max-width: 1080px;
+  max-width: 1180px;
   margin-inline: auto;
 }
 
@@ -498,7 +501,7 @@ textarea {
 
 .star-seg {
   flex: var(--share) 1 0;
-  min-width: 0;
+  min-width: 46px;
   padding: 8px 8px 7px;
   border-radius: 6px;
   background: var(--panel-2);
