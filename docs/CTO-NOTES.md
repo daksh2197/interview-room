@@ -30,7 +30,7 @@ There is no server of ours. The page is a handful of files that GitHub hands to 
 
 ## 2. Seven ideas this repo teaches
 
-The first one is new in this repo. The rest carry over from Mol-Bhav Meter.
+The first one is the new idea in this repo. The rest are the basics under every repo I build.
 
 ### Building on a language model like an engineer
 
@@ -63,7 +63,7 @@ A pure function gets values in and gives values out, and does nothing else. Same
 
 ### Unit tests, and property tests
 
-A unit test runs your code with known inputs and checks the answer. A property test invents hundreds of inputs and checks a rule that must hold for all of them. This repo has four:
+A unit test runs your code with known inputs and checks the answer. A property test invents hundreds of inputs and checks a rule that must hold for all of them. This repo has four, in three files:
 
 - 500 random texts never invent numbers against themselves, and a planted number is always caught (`numbers.test.ts`).
 - 500 random model replies never produce a share below 0, above 1, or NaN (`score.test.ts`).
@@ -125,7 +125,7 @@ CI means a robot runs the tests on every push to main and every pull request. CD
 | "The reply didn't match the grading format" | The model's JSON missed the schema | `validateModelGrade()` | Write the reply as a test in `grade.test.ts` with a fake `send`. The validator's error says which field. |
 | A grade looks wrong | The model misfiled a sentence, or a rule is off | `score.ts` first | Turn it into an eval case with the checks you expected and run `npm run evals`. If the model's excerpts were right, write a unit test for `scoreAnswer()`. |
 | The rewrite never shows up | It keeps adding numbers | `inventedNumbers()` in `numbers.ts` | The page names the numbers. If they were yours, written differently ("two hundred" vs "200"), it's a number-matching gap: add a test. |
-| Nothing happens on Grade, console says CORS | The browser-access header is missing | `makeSend()` in `api/anthropic.ts` | The request must carry `anthropic-dangerous-direct-browser-access: true`. |
+| "Couldn't reach the API" on every try, and the console says CORS | The browser-access header is missing, so the browser hides the reply and it looks like a network failure | `makeSend()` in `api/anthropic.ts` | The request must carry `anthropic-dangerous-direct-browser-access: true`. Check the request headers in the browser's Network tab. |
 | Stories gone | Browser data cleared, or a private window | Nothing to fix in code | Export the bank now and then. Import puts it back. |
 | Import says "not a story bank export" | The file was edited or is from another app | `importStories()` in `stories.ts` | The file needs `"format": "interview-room/stories"` and `"version": 1`. |
 | Green check, but no website | The repo is private, so deploy is skipped on purpose | `ship.yml` | Make the repo public, set Pages to **GitHub Actions**, run the workflow once. |
@@ -139,7 +139,7 @@ Five real changes, easiest first. You can do all of them in the browser: open th
 
 1. **Add a question.** In `src/core/questions.ts`, add a ninth question to the `tam` list in `BANK`, in your own words, with no digits in it. *Done when:* CI goes red on the two tests that expect eight questions a family. Read the log, then decide: swap the question for one of the eight instead, or add a ninth to every family and change those tests to nine.
 2. **Change the pace.** Set `WORDS_PER_MINUTE` in `speaking.ts` to `130` and push. CI goes red on the tests that pin 150, and the eval cases all still pass: at 130 every sample answer stays on the same side of the window. Now try `90`. *Done when:* you've seen two eval cases fail, `ready-named-outcome` and `close-long-setup`, because at that pace their answers run past two minutes. That's the eval set noticing a rule change. Change it back.
-3. **Write an eval case.** Add one of your real answers to `evals/cases.json`, with an `id` starting with its band (`ready-`, `close-` or `rework-`), a `why`, and the three `checks` you expect. *Done when:* `npm test` passes. If it fails, the CI check has told you your expected length or evidence doesn't match the answer you wrote.
+3. **Write an eval case.** Add one of your real answers to `evals/cases.json`, with an `id` starting with its band (`ready-`, `close-` or `rework-`), a `why`, and the three `checks` you expect. *Done when:* `npm test` passes. If it fails, the CI check has told you the length you expected doesn't match the answer you wrote.
 4. **Change a rule.** Set `SETUP_MAX` in `score.ts` to `0.35`. *Done when:* the two tests that pin 40% fail ("are 40% for setup and 30% for action", and "measures each part as a share of the words", whose example sits exactly on 40%), you update them, and the How it grades section on the live page says 35% without you touching `index.html`.
 5. **Change the prompt, and measure it.** With your own key, run `ANTHROPIC_API_KEY=sk-ant-... npm run evals` and save the table. Then change rule 4 in `SYSTEM_PROMPT` to ask for two fixes instead of one, set `PROMPT_VERSION` to `2`, and run it again. *Done when:* you have two tables side by side and can say whether version 2 is better, worse or the same, and why. This is the one to talk through with Claude; ask it to explain the difference before you keep or revert the change.
 
@@ -179,6 +179,7 @@ Say it straight: Claude wrote most of the code as a pair programmer. You chose t
 | Token | The unit models read and write in, roughly a short word. Usage is billed by token. |
 | CORS | The browser rule that stops a page reading replies from another site unless that site says it may |
 | Prompt injection | Text in the input that tries to give the model new instructions |
-| Repo, commit, push, branch, PR | As in Mol-Bhav Meter's notes: the project, one saved change, send to GitHub, a parallel copy, a request to merge |
+| Repo, commit, push | The project folder with its full history; one saved change; send your commits to GitHub |
+| Branch, pull request (PR) | A parallel copy to try something; "please review and merge my branch" |
 | CI / CD | Robot runs the tests / robot deploys if they pass |
 | STAR | Situation, Task, Action, Result: the usual shape for a behavioural answer |

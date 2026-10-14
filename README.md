@@ -21,7 +21,7 @@ Interview prep usually means reading a list of fifty questions and nodding. That
 
 - **Asks one question at a time.** Forty questions across five role families: general behavioural, technical account manager, customer success, solutions engineer, and race or trackside engineer. No repeats until you've had all eight in a set.
 - **Times your answer as you type.** Words become an estimated speaking time, with the one-to-two-minute window marked on a bar.
-- **Grades three things.** Structure (are all four STAR parts there, and in proportion), evidence (a number or a concrete outcome) and length. Three passes is Ready, two is Close, one or none is Rework.
+- **Grades three things.** Structure (are all four STAR parts there, and in proportion), evidence (a number in how it ended, or a concrete outcome) and length. Three passes is Ready, two is Close, one or none is Rework.
 - **Gives you one fix and a tighter version.** The rewrite may only use facts you wrote. If it contains a number you never wrote, it is thrown away and you see the grade without it.
 - **Keeps a story bank.** Your own stories, with the number that proves each one, stored in your browser. Export and import them as a JSON file.
 - **Runs on your key, in your browser.** The key stays in the browser, goes only to Anthropic, and one button forgets it. There is no server in between.
@@ -40,6 +40,8 @@ model:  copy out the Situation, Task, Action and Result sentences, word for word
         suggest one fix and a tighter rewrite
 code:   check every copied sentence is really in the answer (drop it if not)
         measure each part's share of the words
+        count each word once, in the first part that claims it
+        look for a number in the Result, not in the setup
         time the answer at 150 words a minute
         pass or fail three checks, add them up
         throw the rewrite away if it has a number you never wrote
@@ -116,9 +118,11 @@ Want the guided tour? [docs/CTO-NOTES.md](docs/CTO-NOTES.md) explains every idea
 ## What got caught along the way
 
 - **The judge failed my own test answer.** I wrote a short billing story to test the pipeline. The grader said Structure: fail. Setup was 45% of the words and the rule is 40%. I had written the kind of answer the tool exists to catch, so I fixed the answer, not the rule.
-- **The number check was stricter than my test.** A browser test fed the grader a reply with some HTML in it, `window.__xss=1`, and a planted "99 hours", to prove the HTML would show as text and the 99 would be caught. Both happened. The check also flagged the "1", because the candidate never wrote a 1. My test expected only the 99. The test was wrong, not the check: every digit counts. The word "one" is let through, since "one of the customers" isn't a claim.
+- **The number check was stricter than my test.** A browser check during the build fed the grader a reply with some HTML in it, `window.__xss=1`, and a planted "99 hours", to prove the HTML would show as text and the 99 would be caught. Both happened. The check also flagged the "1", because the candidate never wrote a 1. My test expected only the 99. The test was wrong, not the check: every digit counts. The word "one" is let through, since "one of the customers" isn't a claim.
 - **The browser needs a permission slip.** The API only answers a web page if the request carries the `anthropic-dangerous-direct-browser-access` header. I checked it both ways against the live API: without the header there is no CORS header on the reply, so the browser hides it. The "dangerous" is about the key being visible to the page, which is the point when it is your own key on your own device.
 - **Screenshots caught two layout bugs the tests couldn't.** At 1440 pixels wide the footer was narrower than the header, because a page-width rule got lost when I copied the base styles. At 320 pixels the Task block in the STAR bar was too thin to show "12%". Both are fixed.
+
+- **An outside review found eight bugs the tests had missed.** Before this went anywhere it got a cold read from a second Claude session that hadn't seen it being built. The worst: press Grade, then Next question while the reply is on its way, and the grade for question 1 landed under question 2. It also found that one sentence filed under all four STAR parts counted four times (the bar read 83% four times over), that a quote could match the middle of a word, that "Two years ago" in the setup passed the evidence check, that the page could say "Setup is 40%. Keep it under 40%", that a leftover "too short" message could sit under a newer one, that one-word quotes were reported as made up, and that the CI workflow would fail on its first public push. All fixed, each with a test where a test can catch it.
 
 ## How this was built
 
@@ -136,5 +140,7 @@ This is practice. It can tell you whether an answer is clear. It can't tell you 
 ## License
 
 [MIT](LICENSE). Use it, fork it, write your own questions.
+
+The typefaces, Bricolage Grotesque, Geist and Geist Mono, are bundled from Fontsource under the SIL Open Font License 1.1.
 
 Built in Calgary by [Daksh Dua](https://dakshdua.ca).

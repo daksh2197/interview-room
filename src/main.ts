@@ -18,7 +18,7 @@ import { DEFAULT_MODEL, isModelId, MODELS, type ModelId } from './core/prompt';
 import { isRoleFamily, nextQuestion, questionsFor, ROLE_FAMILIES, type Question, type RoleFamily } from './core/questions';
 import { ACTION_MIN, SETUP_MAX } from './core/score';
 import { clock, countWords, lengthVerdict, speakingSeconds, TARGET, WORDS_PER_MINUTE } from './core/speaking';
-import { exportStories, importStories, isBlank, mergeStories, type Story } from './core/stories';
+import { exportStories, importStories, isBlank, LIMITS, mergeStories, type Story } from './core/stories';
 import { announce, BAND_TITLE, pct, PROBLEM_TEXT, tooShortText } from './core/words';
 import { clearResult, renderLoading, renderResult } from './ui/report';
 import { attachSpeech } from './ui/speech';
@@ -107,7 +107,7 @@ function showQuestion(): void {
     setText(q, `That's every question in this set. Start again, or pick another role.`);
     setText(next, 'Start the set again');
   }
-  el<HTMLButtonElement>('grade').disabled = current === null;
+  el<HTMLButtonElement>('grade').disabled = current === null || grading;
 }
 
 function askNext(): void {
@@ -156,6 +156,7 @@ async function grade(): Promise<void> {
   }
   const key = apiKey();
   if (!key) {
+    clearResult(result);
     el('key-hint').hidden = false;
     setText(status, 'Add your key to grade, or watch a demo round.');
     el('key-hint').querySelector('a')?.focus();
@@ -163,14 +164,30 @@ async function grade(): Promise<void> {
   }
 
   grading = true;
+  const asking = current;
   const button = el<HTMLButtonElement>('grade');
   button.disabled = true;
+  // While a grade is on its way, the question can't change underneath it.
+  el<HTMLButtonElement>('next').disabled = true;
+  el<HTMLSelectElement>('family').disabled = true;
   setText(button, 'Grading…');
   result.setAttribute('aria-busy', 'true');
   renderLoading(result);
   setText(status, 'Grading your answer.');
 
-  const outcome = await gradeAnswer(makeSend(key), { model: model(), question: current.text, answer, stories });
+  const outcome = await gradeAnswer(makeSend(key), { model: model(), question: asking.text, answer, stories });
+
+  grading = false;
+  el<HTMLButtonElement>('next').disabled = false;
+  el<HTMLSelectElement>('family').disabled = false;
+  setText(button, 'Grade my answer');
+  button.disabled = current === null;
+  // Belt and braces: if the question changed anyway, this grade belongs to no one on screen.
+  if (current !== asking) {
+    clearResult(result);
+    result.removeAttribute('aria-busy');
+    return;
+  }
 
   renderResult(result, outcome);
   result.removeAttribute('aria-busy');
@@ -182,9 +199,6 @@ async function grade(): Promise<void> {
         ? PROBLEM_TEXT[outcome.problem]
         : tooShortText(outcome.words),
   );
-  grading = false;
-  button.disabled = false;
-  setText(button, 'Grade my answer');
   result.focus({ preventScroll: false });
 }
 
@@ -296,6 +310,10 @@ function storyStatus(message: string, undo = false): void {
     button.textContent = 'Undo';
     button.addEventListener('click', () => {
       if (!lastDeleted) return;
+      if (stories.length >= LIMITS.stories) {
+        storyStatus(`The bank is full at ${LIMITS.stories} stories, so it can't be restored.`);
+        return;
+      }
       stories.splice(lastDeleted.index, 0, lastDeleted.story);
       lastDeleted = null;
       persistStories();
@@ -426,7 +444,7 @@ function start(): void {
     event.preventDefault();
     const story = readStoryForm();
     if (isBlank(story)) {
-      storyStatus('Write at least a title before adding.');
+      storyStatus('Write something in at least one box before adding.');
       return;
     }
     const before = stories.length;
@@ -464,10 +482,9 @@ function start(): void {
     persistStories();
     renderStories();
     const added = stories.length - before;
+    const full = stories.length >= LIMITS.stories ? ` The bank is full at ${LIMITS.stories} stories, so the rest were left out.` : '';
     storyStatus(
-      added === 0
-        ? 'Nothing new in that file.'
-        : `Imported ${added} ${added === 1 ? 'story' : 'stories'}.`,
+      (added === 0 ? 'Nothing new in that file.' : `Imported ${added} ${added === 1 ? 'story' : 'stories'}.`) + full,
     );
   });
 

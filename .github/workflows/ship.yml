@@ -21,10 +21,10 @@ on:
 permissions:
   contents: read
 
-# If two pushes land close together, only the newest one needs to finish.
+# If two pushes land close together, they run one after the other. A deploy is never cut off halfway.
 concurrency:
   group: ship-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -32,7 +32,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: read
     steps:
       - uses: actions/checkout@v7
 
@@ -47,15 +46,10 @@ jobs:
       - name: Run the tests
         run: npm test
 
-      - name: Ask GitHub where this site will live
-        id: pages
-        if: github.ref == 'refs/heads/main' && !github.event.repository.private
-        uses: actions/configure-pages@v6
-
+      # The site's address comes from "homepage" in package.json.
       - name: Build
         run: npm run build
         env:
-          SITE_URL: ${{ steps.pages.outputs.base_url }}
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
 
       - name: Hand the build to the deploy job

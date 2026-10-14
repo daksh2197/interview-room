@@ -65,7 +65,7 @@
 
         <div class="actions">
           <button type="button" class="btn btn-primary" id="grade">Grade my answer</button>
-          <button type="button" class="btn btn-ghost" id="mic" hidden aria-pressed="false">Speak</button>
+          <button type="button" class="btn btn-ghost" id="mic" hidden>Speak</button>
         </div>
         <p class="hint" id="mic-note" hidden>
           Speaking uses your browser's speech service, which may send the audio to the browser maker to turn into text.
@@ -75,7 +75,7 @@
         </p>
 
         <p class="vh" id="status" role="status"></p>
-        <div class="result" id="result" aria-label="Grade" tabindex="-1"></div>
+        <div class="result" id="result" tabindex="-1"></div>
       </section>
 
       <section class="demo panel" id="demo" aria-labelledby="h-demo">
@@ -170,14 +170,15 @@
           Result. Then this page checks its work and does the counting. Three checks, one point each:
         </p>
         <ul>
-          <li><strong>Structure.</strong> All four parts are there, setup is under <span id="rule-setup">40%</span> of the words, and the action is at least <span id="rule-action">30%</span>.</li>
-          <li><strong>Evidence.</strong> A number, or a concrete outcome someone could check.</li>
+          <li><strong>Structure.</strong> All four parts are there, setup is no more than <span id="rule-setup">40%</span> of the words, and the action is at least <span id="rule-action">30%</span>.</li>
+          <li><strong>Evidence.</strong> How it ended has a number in it, or a concrete outcome someone could check.</li>
           <li><strong>Length.</strong> One to two minutes out loud, at an assumed <span id="rule-pace">150</span> words a minute.</li>
         </ul>
         <p>Three is Ready, two is Close, one or none is Rework. Every quote the model gives is checked against your answer, and a rewrite that uses a number you never wrote is thrown away.</p>
         <p>
-          Your stories and your key stay in this browser. Your answer and your stories go to Anthropic, and nowhere
-          else, only when you press Grade. This page has no server, no account and no tracking.
+          Your stories and your key stay in this browser. Your answer and your stories leave it only when you press
+          Grade, and then only to Anthropic. If you use Speak, your browser's speech service hears the audio. This page
+          has no server, no account and no tracking.
         </p>
         <p>This is practice. It can tell you whether an answer is clear. It can't tell you whether you'll get the job.</p>
       </section>

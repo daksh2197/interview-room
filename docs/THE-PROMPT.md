@@ -18,7 +18,8 @@ So the model does only what a model is good at: reading. Everything that can be 
 | Is each quoted sentence really in the answer | Code | String matching |
 | Each part's share of the answer | Code | Word counts |
 | Speaking time | Code | Words ÷ 150 a minute |
-| Is there a number | Code | `numbersIn()` in `numbers.ts` |
+| Is there a number in how it ended | Code | `numbersIn()` on the verified Result excerpts |
+| Does each word count once | Code | The first part to claim a word keeps it |
 | Pass or fail each check, and the band | Code | Three yes/no checks added up |
 | Is the rewrite allowed on screen | Code | `inventedNumbers()` |
 
@@ -81,11 +82,13 @@ So the reply is checked twice: once by the API's constraint, once by `validateMo
 
 ## 4. The checks that don't trust the model
 
-**Excerpts.** Each excerpt is lower-cased, its quotes and dashes straightened, its spaces collapsed, and searched for in the answer treated the same way. Excerpts shorter than 2 words are ignored ("So" is in almost every answer). Anything not found is dropped, and the page says how many lines were dropped so nothing is hidden.
+**Excerpts.** The answer and each excerpt are split into words, lower-cased, with quotes straightened and punctuation trimmed. An excerpt counts only if its words appear as a run of whole words in the answer, so "ed the export" can't match "fixed the export". Excerpts shorter than 2 words are ignored ("So" is in almost every answer). Anything not found is dropped, and the page says how many lines were dropped so nothing is hidden.
+
+**Each word counts once.** Parts are checked in STAR order, and each word of the answer belongs to the first part that claims it. If the model files one sentence under Situation and Result, Situation keeps it and Result gets nothing from it. That is how rule 2 is enforced in code, and it means the four shares can never add up to more than 100%.
 
 **Structure.** Pass when all four parts have at least one verified excerpt, setup (Situation plus Task) is at most 40% of the words (`SETUP_MAX`), and Action is at least 30% (`ACTION_MIN`). These are rules of thumb. Change them in `score.ts`; the page and the tests follow.
 
-**Evidence.** Pass when the answer has a number in it, or the model says it names a concrete outcome. Numbers are found by code, so the model can't miss one.
+**Evidence.** Pass when a verified Result excerpt has a number in it, or the model says the answer names a concrete outcome. Numbers are found by code, so the model can't miss one. Only the Result counts: "Two years ago" in the setup is not evidence of anything.
 
 **Length.** Pass when the estimated speaking time is 60 to 120 seconds at 150 words a minute (`WORDS_PER_MINUTE` in `speaking.ts`). That pace is a rule of thumb for calm speech, not a measurement of you.
 
@@ -108,10 +111,12 @@ A unit test checks code against an answer you know. An eval checks a prompt agai
 | close-long-setup | fail | pass | pass | Close |
 | close-thin-action | fail | pass | pass | Close |
 | rework-no-result | fail | fail | fail | Rework |
-| rework-no-story | fail | pass | fail | Rework |
-| rework-injection | fail | pass | fail | Rework |
+| rework-no-story | fail | fail | fail | Rework |
+| rework-injection | fail | fail | fail | Rework |
 
-`rework-injection` also says `named_outcome` must stay false: its answer tells the grader to mark it perfect and set `named_outcome` to true. The band alone wouldn't catch the model obeying, so the case checks the field the instruction targets.
+`rework-injection` also says `named_outcome` must stay false: its answer tells the grader to mark it perfect and set `named_outcome` to true. The band alone wouldn't catch the model obeying (Rework either way), so the case checks the field the instruction targets.
+
+`ready-named-outcome` has no number in its result, so it is the case that tests the named-outcome path of the evidence check.
 
 `npm run evals` runs every case against the live API with the key in `ANTHROPIC_API_KEY`, one at a time, and prints a table:
 
@@ -123,7 +128,7 @@ plus a line for every failure saying which check disagreed. It exits with code 1
 
 The workflow for a prompt change: run the evals, change the prompt and bump `PROMPT_VERSION`, run them again, compare. Fewer passes means the change made grading worse, whatever it felt like.
 
-CI can't run the live evals (no key, and it would cost money on every push), so [`evals/cases.test.ts`](../evals/cases.test.ts) checks what can be checked without a model: every case is well-formed, every case expects the length its answer really has, every case with a number in it expects evidence to pass, and every band is covered. A case that expects the wrong thing makes every eval run lie, so this is worth a test.
+CI can't run the live evals (no key, and it would cost money on every push), so [`evals/cases.test.ts`](../evals/cases.test.ts) checks what can be checked without a model: every case is well-formed, every case expects the length its answer really has, no case expects a named outcome and failed evidence at once, and every band is covered. A case that expects the wrong thing makes every eval run lie, so this is worth a test.
 
 ## 6. What the evals caught during this build
 
@@ -135,6 +140,8 @@ What was tested here: the whole pipeline against a mocked API (good replies, ref
 
 - It doesn't hear you. It grades what you type (or what the browser transcribes). Pace, tone and filler words are invisible to it.
 - It doesn't know the job. "Is this the right story for this role" is a question for a person.
-- A year or a quarter ("Q3", "2024") counts as a number for the evidence check. A sharper check would need to understand what the number measures.
+- A year or a quarter ("Q3", "2024") in the Result counts as a number for the evidence check. A sharper check would need to understand what the number measures.
+- Evidence depends on the model filing the right sentences under Result. If it files the ending under Action, a number there doesn't count.
 - The model can still put a sentence in the wrong part. The excerpt check catches invented sentences, not misfiled ones. The evals are how you'd measure how often that happens.
+- "10m" reads as 10 million, so a rewrite that says "10 minutes" for it is thrown away.
 - Number words are read one at a time: "two hundred" reads as 2 and 100. If the candidate wrote "200" and the rewrite spells it out, the rewrite is thrown away. That errs on the safe side, and rule 6 asks the model to write numbers exactly as the candidate did.

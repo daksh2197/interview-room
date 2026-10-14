@@ -80,8 +80,6 @@ a:hover {
 
 /* ---------- page frame ---------- */
 
-.site-head,
-main,
 .site-head {
   display: flex;
   align-items: center;

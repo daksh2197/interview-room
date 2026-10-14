@@ -42,9 +42,10 @@ export function attachSpeech(button: HTMLButtonElement, field: HTMLTextAreaEleme
   if (!Ctor) return false;
 
   let active: Recognition | null = null;
+  // The label says what pressing does next. No aria-pressed as well: a toggle whose
+  // name also changes reads twice to a screen reader.
   const setState = (on: boolean): void => {
-    button.setAttribute('aria-pressed', String(on));
-    button.textContent = on ? 'Stop' : 'Speak';
+    button.textContent = on ? 'Stop speaking' : 'Speak';
   };
 
   button.addEventListener('click', () => {
