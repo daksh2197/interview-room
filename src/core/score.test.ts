@@ -113,7 +113,52 @@ describe('scoreAnswer', () => {
     };
     const part = scoreAnswer(answer, grade).parts.action;
     expect(part.excerpts).toEqual(['I rebuilt the whole pipeline']);
-    expect(part.dropped).toEqual(['So']);
+    expect(part.ignored).toEqual(['So']);
+    expect(part.dropped).toEqual([]);
+    expect(part.share).toBeCloseTo(5 / 9);
+  });
+
+  it('counts a sentence once even if the model files it under every part', () => {
+    const answer = 'I fixed the export bug for the customer. ' + words(20);
+    const sentence = 'I fixed the export bug for the customer.';
+    const report = scoreAnswer(answer, {
+      situation: [sentence], task: [sentence], action: [sentence], result: [sentence],
+      named_outcome: false, coaching: '', rewrite: '',
+    });
+    expect(report.parts.situation.present).toBe(true);
+    expect(report.structure.missing).toEqual(['task', 'action', 'result']);
+    const total = Object.values(report.parts).reduce((sum, p) => sum + p.share, 0);
+    expect(total).toBeLessThanOrEqual(1);
+  });
+
+  it('counts overlapping excerpts in one part once', () => {
+    const answer = 'Then I fixed the export bug quickly.';
+    const report = scoreAnswer(answer, {
+      situation: [], task: [], result: [],
+      action: ['I fixed the export bug', 'fixed the export bug', 'the export bug'],
+      named_outcome: false, coaching: '', rewrite: '',
+    });
+    expect(report.parts.action.share).toBeCloseTo(5 / 7);
+  });
+
+  it('only matches whole words, never the middle of a word', () => {
+    const answer = 'I fixed the export bug and then tested it.';
+    const report = scoreAnswer(answer, {
+      situation: [], task: [], result: [],
+      action: ['ed the export', 'xport bug and t'],
+      named_outcome: false, coaching: '', rewrite: '',
+    });
+    expect(report.parts.action.present).toBe(false);
+    expect(report.parts.action.dropped).toEqual(['ed the export', 'xport bug and t']);
+  });
+
+  it('takes evidence only from the result, so a number in the setup does not count', () => {
+    const answer = 'Two years ago our reports were slow. I rewrote them. In the end it went well.';
+    const report = scoreAnswer(answer, {
+      situation: ['Two years ago our reports were slow.'], task: [], action: ['I rewrote them.'],
+      result: ['In the end it went well.'], named_outcome: false, coaching: '', rewrite: '',
+    });
+    expect(report.evidence).toEqual({ ok: false, numbers: [], namedOutcome: false });
   });
 
   it('accepts a named outcome without a number as evidence', () => {

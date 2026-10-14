@@ -44,7 +44,9 @@ describe('the lines under a grade', () => {
   });
 
   it('quotes the numbers it found', () => {
-    expect(evidenceLine(report('We cut it by 40% in 3 weeks.'))).toBe('Numbers in your answer: "40" and "3".');
+    expect(evidenceLine(report('We cut it by 40% in 3 weeks.', { result: ['We cut it by 40% in 3 weeks.'] }))).toBe(
+      'Numbers in how it ended: "40" and "3".',
+    );
   });
 
   it('gets singular and plural right', () => {
@@ -59,8 +61,34 @@ describe('the lines under a grade', () => {
   });
 });
 
+describe('at the limits', () => {
+  const at = (setup: number, action: number) => {
+    const total = 1000;
+    const answer = (n: number, w: string) => Array(n).fill(w).join(' ');
+    const s = answer(setup, 'ss'), a = answer(action, 'aa'), r = answer(total - setup - action - 10, 'rr'), t = answer(10, 'tt');
+    return report([s, t, a, r].join(' '), { situation: [s], task: [t], action: [a], result: [r] });
+  };
+
+  it('never says "Setup is 40%" and "keep it to 40% or less" in one breath', () => {
+    expect(structureLine(at(394, 400))).toBe('Setup is 41% of the answer. Keep it to 40% or less and get to what you did.');
+  });
+
+  it('never says "Action is only 30%" and "at least 30%" in one breath', () => {
+    expect(structureLine(at(100, 295))).toBe('Action is only 29%. It should carry the answer: at least 30%.');
+  });
+
+  it('passes exactly 40% setup and 30% action, and says so', () => {
+    expect(structureLine(at(390, 300))).toBe('All four parts are there. Setup is 40% of the answer and action is 30%.');
+  });
+
+  it('shows a tiny share as "under 1%", not 0%', () => {
+    expect(pct(0.004)).toBe('under 1%');
+  });
+});
+
 describe('long lists', () => {
   it('lists the first four numbers, then "and more"', () => {
-    expect(evidenceLine(report('We did 1 then 2 then 3 then 4 then 5.'))).toBe('Numbers in your answer: "1", "2", "3", "4" and more.');
+    const answer = 'We did 1 then 2 then 3 then 4 then 5.';
+    expect(evidenceLine(report(answer, { result: [answer] }))).toBe('Numbers in how it ended: "1", "2", "3", "4" and more.');
   });
 });

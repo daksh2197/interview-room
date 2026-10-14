@@ -30,13 +30,16 @@ export const MIN_WORDS_TO_GRADE = 20;
 export type Band = 'ready' | 'close' | 'rework';
 
 export interface PartReport {
+  /** True when at least one word of the answer is counted for this part. */
   present: boolean;
-  /** Share of the answer's words, 0 to 1. */
+  /** Share of the answer's words, 0 to 1. Each word counts once, for the first part that claims it. */
   share: number;
-  /** Excerpts found in the answer. */
+  /** Excerpts found in the answer, word for word. */
   excerpts: string[];
   /** Excerpts the model gave that are not in the answer. Dropped, but shown so nothing is hidden. */
   dropped: string[];
+  /** Excerpts too short to mean anything ("So"). Ignored, and not counted as dropped. */
+  ignored: string[];
 }
 
 export type StructureIssue = 'missing-part' | 'long-setup' | 'thin-action';
@@ -46,6 +49,7 @@ export interface Report {
   seconds: number;
   parts: Record<StarPart, PartReport>;
   structure: { ok: boolean; missing: StarPart[]; issues: StructureIssue[]; setupShare: number; actionShare: number };
+  /** `numbers` are the numbers inside the verified Result excerpts. */
   evidence: { ok: boolean; numbers: string[]; namedOutcome: boolean };
   length: { ok: boolean; verdict: LengthVerdict };
   band: Band;
@@ -56,37 +60,91 @@ export interface Report {
 export function normalise(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[‘’‛′]/g, "'")
-    .replace(/[“”‟″]/g, '"')
-    .replace(/[‐-―−]/g, '-')
+    .replace(/[\u2018\u2019\u201B\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201F\u2033]/g, '"')
+    .replace(/[\u2010-\u2015\u2212]/g, '-')
     .replace(/\s+/g, ' ')
     .trim()
     .replace(/^[\s"'.,;:!?()-]+|[\s"'.,;:!?()-]+$/g, '');
 }
 
-function checkPart(answer: string, excerpts: readonly string[], totalWords: number): PartReport {
-  const haystack = normalise(answer);
-  const found: string[] = [];
-  const dropped: string[] = [];
-  for (const excerpt of excerpts) {
-    const needle = normalise(excerpt);
-    if (countWords(needle) >= EXCERPT_MIN_WORDS && haystack.includes(needle)) {
-      if (!found.some((f) => normalise(f) === needle)) found.push(excerpt.trim());
-    } else if (excerpt.trim() !== '') {
-      dropped.push(excerpt.trim());
+/**
+ * The words of a text, normalised, the same words countWords() counts.
+ * Matching on whole words means an excerpt like "ed the export" can never match "fixed the export".
+ */
+export function wordsOf(text: string): string[] {
+  return text
+    .split(/\s+/)
+    .filter((token) => /[\p{L}\p{N}]/u.test(token))
+    .map((token) => normalise(token).replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''));
+}
+
+/** Every index where `needle` appears in `haystack` as a run of whole words. */
+function findRuns(haystack: readonly string[], needle: readonly string[]): number[] {
+  const starts: number[] = [];
+  if (needle.length === 0) return starts;
+  for (let i = 0; i + needle.length <= haystack.length; i++) {
+    let match = true;
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) {
+        match = false;
+        break;
+      }
     }
+    if (match) starts.push(i);
   }
-  const words = found.reduce((sum, e) => sum + countWords(e), 0);
-  const share = totalWords > 0 ? Math.min(1, words / totalWords) : 0;
-  return { present: found.length > 0, share, excerpts: found, dropped };
+  return starts;
+}
+
+/**
+ * Check every part's excerpts against the answer and measure the parts.
+ * `claimed[i]` records which part owns word i. Parts are checked in STAR order, so if the
+ * model files one sentence under two parts, the first one keeps it and the second gets nothing.
+ */
+function checkParts(answer: string, grade: ModelGrade): Record<StarPart, PartReport> {
+  const words = wordsOf(answer);
+  const claimed: (StarPart | null)[] = words.map(() => null);
+  const parts = {} as Record<StarPart, PartReport>;
+
+  for (const part of STAR_PARTS) {
+    const report: PartReport = { present: false, share: 0, excerpts: [], dropped: [], ignored: [] };
+    let count = 0;
+    for (const raw of grade[part]) {
+      const excerpt = raw.trim();
+      if (excerpt === '') continue;
+      const needle = wordsOf(excerpt);
+      if (needle.length < EXCERPT_MIN_WORDS) {
+        report.ignored.push(excerpt);
+        continue;
+      }
+      const starts = findRuns(words, needle);
+      if (starts.length === 0) {
+        report.dropped.push(excerpt);
+        continue;
+      }
+      // Prefer an occurrence no other part has claimed yet.
+      const free = starts.find((s) => needle.every((_, j) => claimed[s + j] === null || claimed[s + j] === part));
+      const start = free ?? starts[0] ?? 0;
+      for (let j = 0; j < needle.length; j++) {
+        if (claimed[start + j] === null) {
+          claimed[start + j] = part;
+          count++;
+        }
+      }
+      if (!report.excerpts.some((e) => normalise(e) === normalise(excerpt))) report.excerpts.push(excerpt);
+    }
+    report.present = count > 0;
+    report.share = words.length > 0 ? Math.min(1, count / words.length) : 0;
+    parts[part] = report;
+  }
+  return parts;
 }
 
 export function scoreAnswer(answer: string, grade: ModelGrade): Report {
   const words = countWords(answer);
   const seconds = speakingSeconds(answer);
 
-  const parts = {} as Record<StarPart, PartReport>;
-  for (const part of STAR_PARTS) parts[part] = checkPart(answer, grade[part], words);
+  const parts = checkParts(answer, grade);
 
   const missing = STAR_PARTS.filter((part) => !parts[part].present);
   const setupShare = Math.min(1, parts.situation.share + parts.task.share);
@@ -96,7 +154,8 @@ export function scoreAnswer(answer: string, grade: ModelGrade): Report {
   if (setupShare > SETUP_MAX) issues.push('long-setup');
   if (parts.action.present && actionShare < ACTION_MIN) issues.push('thin-action');
 
-  const numbers = numbersIn(answer).map((n) => n.raw);
+  // Evidence has to be in how it ended. A number in the setup ("Two years ago") is not evidence.
+  const numbers = parts.result.excerpts.flatMap((e) => numbersIn(e).map((n) => n.raw));
   const evidenceOk = numbers.length > 0 || grade.named_outcome;
 
   const verdict = lengthVerdict(seconds);

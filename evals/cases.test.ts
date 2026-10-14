@@ -1,12 +1,11 @@
 /**
  * What CI can check about the evals without a key: that every case is well-formed,
- * and that the parts of its expectation that don't need a model (length, and evidence
- * when the answer has a number) are actually true of the answer as written.
+ * that every band is covered, and that the one expectation that needs no model (length)
+ * is actually true of the answer as written.
  * A case that expects the wrong thing makes every eval run lie, so this matters.
  */
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { numbersIn } from '../src/core/numbers';
 import type { ModelGrade } from '../src/core/schema';
 import { lengthVerdict, speakingSeconds } from '../src/core/speaking';
 import { bandFor, readCases, score, table } from './evals';
@@ -27,8 +26,9 @@ describe('the eval cases', () => {
     expect(lengthVerdict(speakingSeconds(c.answer)) === 'on-target').toBe(c.checks.length);
   });
 
-  it.each(cases.map((c) => [c.id, c] as const))('%s expects evidence if its answer has a number', (_id, c) => {
-    if (numbersIn(c.answer).length > 0) expect(c.checks.evidence).toBe(true);
+  it.each(cases.map((c) => [c.id, c] as const))('%s does not expect a named outcome and no evidence at once', (_id, c) => {
+    // A named outcome passes the evidence check on its own, so the two can't contradict each other.
+    if (c.named_outcome === true) expect(c.checks.evidence).toBe(true);
   });
 
   it('starts each id with its expected band', () => {

@@ -30,7 +30,21 @@ export const PART_NAME: Record<StarPart, string> = {
 /** A share from 0 to 1 as a whole percent. Never "NaN%" or "-0%". */
 export function pct(share: number): string {
   if (!Number.isFinite(share) || share <= 0) return '0%';
-  return `${Math.min(100, Math.round(share * 100))}%`;
+  const whole = Math.min(100, Math.round(share * 100));
+  return whole === 0 ? 'under 1%' : `${whole}%`;
+}
+
+/**
+ * A share shown next to its limit. Plain rounding could print "Setup is 40%. Keep it to 40% or less"
+ * for 40.4%, so the figure is nudged to the side of the limit it is really on. Away from the
+ * limit it rounds normally, so it agrees with the STAR bar.
+ */
+function pctBeside(share: number, limit: number, side: 'over' | 'under'): string {
+  const shown = Math.round(share * 100);
+  const edge = Math.round(limit * 100);
+  if (side === 'over' && shown <= edge) return `${edge + 1}%`;
+  if (side === 'under' && shown >= edge) return `${edge - 1}%`;
+  return pct(share);
 }
 
 function list(items: readonly string[], more = false): string {
@@ -46,17 +60,17 @@ export function structureLine(report: Report): string {
   }
   const out: string[] = [];
   if (issues.includes('missing-part')) out.push(`Missing: ${list(missing.map((p) => PART_NAME[p]))}.`);
-  if (issues.includes('long-setup')) out.push(`Setup is ${pct(setupShare)} of the answer. Keep it under ${pct(SETUP_MAX)} and get to what you did.`);
-  if (issues.includes('thin-action')) out.push(`Action is only ${pct(actionShare)}. It should carry the answer: at least ${pct(ACTION_MIN)}.`);
+  if (issues.includes('long-setup')) out.push(`Setup is ${pctBeside(setupShare, SETUP_MAX, 'over')} of the answer. Keep it to ${pct(SETUP_MAX)} or less and get to what you did.`);
+  if (issues.includes('thin-action')) out.push(`Action is only ${pctBeside(actionShare, ACTION_MIN, 'under')}. It should carry the answer: at least ${pct(ACTION_MIN)}.`);
   return out.join(' ');
 }
 
 export function evidenceLine(report: Report): string {
   const { numbers, namedOutcome, ok } = report.evidence;
-  if (!ok) return 'No number and no concrete outcome. Say how it ended in a way someone could check.';
+  if (!ok) return 'No number and no concrete outcome in how it ended. Say how it ended in a way someone could check.';
   if (numbers.length > 0) {
     const shown = numbers.slice(0, 4).map((n) => `"${n}"`);
-    return `Numbers in your answer: ${list(shown, numbers.length > 4)}.`;
+    return `Numbers in how it ended: ${list(shown, numbers.length > 4)}.`;
   }
   return namedOutcome ? 'No number, but it names a concrete outcome. A number would make it stronger.' : '';
 }
