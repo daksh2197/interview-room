@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Interview Room</title>
+    <meta
+      name="description"
+      content="A mock interviewer that asks one question at a time and grades your STAR answers. Bring your own key, or watch the demo."
+    />
+    <meta name="theme-color" content="#111214" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Interview Room" />
+    <meta property="og:description" content="One question at a time. Answer it, and see what was missing." />
+    <meta property="og:image" content="%SITE_URL%/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip" href="#answer">Skip to your answer</a>
+
+    <header class="site-head" data-chrome>
+      <a class="brand" href="https://dakshdua.ca" aria-label="Daksh Dua, dakshdua.ca">
+        <span class="brand-tile" aria-hidden="true">DD</span>
+        <span>Daksh Dua</span>
+      </a>
+      <nav class="head-links" aria-label="About this tool">
+        <a href="#how">How it grades</a>
+        <a href="%REPO_URL%">Source</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="intro" data-chrome>
+        <h1>Interview Room</h1>
+        <p class="lede">One question at a time. Answer it the way you'd say it, and see what was missing.</p>
+      </div>
+
+      <section class="room" id="practice" aria-labelledby="question">
+        <div class="room-bar">
+          <div class="family">
+            <label for="family">Role</label>
+            <select id="family"></select>
+          </div>
+          <button type="button" class="btn btn-ghost btn-small" id="next">Next question</button>
+        </div>
+
+        <p class="q-count" id="q-count"></p>
+        <h2 class="question" id="question"></h2>
+
+        <div class="answer-field">
+          <label for="answer">Your answer</label>
+          <textarea id="answer" rows="9" maxlength="6000" spellcheck="true" placeholder="Situation, task, what you did, how it ended."></textarea>
+          <div class="pace" id="pace" aria-hidden="true">
+            <span class="pace-fill" id="pace-fill"></span>
+            <span class="pace-window"></span>
+          </div>
+          <p class="pace-read" id="pace-read"></p>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-primary" id="grade">Grade my answer</button>
+          <button type="button" class="btn btn-ghost" id="mic" hidden aria-pressed="false">Speak</button>
+        </div>
+        <p class="hint" id="mic-note" hidden>
+          Speaking uses your browser's speech service, which may send the audio to the browser maker to turn into text.
+        </p>
+        <p class="hint" id="key-hint" hidden>
+          Grading needs your own Anthropic key. <a href="#key">Add it</a>, or <a href="#demo">watch a demo round</a> first.
+        </p>
+
+        <p class="vh" id="status" role="status"></p>
+        <div class="result" id="result" aria-label="Grade" tabindex="-1"></div>
+      </section>
+
+      <section class="demo panel" id="demo" aria-labelledby="h-demo">
+        <h2 id="h-demo">Watch a demo round</h2>
+        <p>
+          No key needed. The candidate is invented, and the model's replies were written by hand in the API's format.
+          Everything after the reply is the real grader.
+        </p>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost" id="play-demo">Play round 1 of 2</button>
+        </div>
+        <div class="demo-out" id="demo-out"></div>
+      </section>
+
+      <div class="side">
+        <section class="panel" id="key" aria-labelledby="h-key">
+          <h2 id="h-key">Your key</h2>
+          <p>
+            Paste an Anthropic API key from the Claude Console. It stays in this browser, and it is sent only to
+            api.anthropic.com, with each answer you grade. Usage is billed to your own Anthropic account.
+          </p>
+          <form class="key-form" id="key-form" autocomplete="off">
+            <div class="field">
+              <label for="api-key">API key</label>
+              <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…" />
+            </div>
+            <div class="field">
+              <label for="model">Model</label>
+              <select id="model"></select>
+            </div>
+            <div class="actions">
+              <button type="submit" class="btn btn-primary btn-small" id="save-key">Save key</button>
+              <button type="button" class="btn btn-ghost btn-small" id="forget-key">Forget key</button>
+            </div>
+          </form>
+          <p class="note" id="key-status" role="status"></p>
+        </section>
+
+        <section class="panel" id="stories" aria-labelledby="h-stories">
+          <h2 id="h-stories">Story bank</h2>
+          <p>
+            Your own stories, kept in this browser. They go to the model with each answer, so a rewrite can use your
+            numbers. A rewrite may only use numbers you wrote here or in the answer.
+          </p>
+          <ul class="story-list" id="story-list"></ul>
+          <p class="note" id="story-empty">No stories yet.</p>
+
+          <details class="add-story">
+            <summary>Add a story</summary>
+            <form id="story-form" autocomplete="off">
+              <div class="field">
+                <label for="s-title">Title</label>
+                <input id="s-title" type="text" maxlength="120" />
+              </div>
+              <div class="field">
+                <label for="s-situation">Situation</label>
+                <textarea id="s-situation" rows="2" maxlength="4000"></textarea>
+              </div>
+              <div class="field">
+                <label for="s-task">Task</label>
+                <textarea id="s-task" rows="2" maxlength="4000"></textarea>
+              </div>
+              <div class="field">
+                <label for="s-action">Action</label>
+                <textarea id="s-action" rows="3" maxlength="4000"></textarea>
+              </div>
+              <div class="field">
+                <label for="s-result">Result</label>
+                <textarea id="s-result" rows="2" maxlength="4000"></textarea>
+              </div>
+              <div class="field">
+                <label for="s-number">The number that proves it</label>
+                <input id="s-number" type="text" maxlength="200" placeholder="e.g. tickets down from 40 to 12 a week" />
+              </div>
+              <button type="submit" class="btn btn-primary btn-small">Add story</button>
+            </form>
+          </details>
+
+          <div class="actions">
+            <button type="button" class="btn btn-ghost btn-small" id="export">Export</button>
+            <button type="button" class="btn btn-ghost btn-small" id="import">Import</button>
+            <input type="file" id="import-file" accept="application/json,.json" hidden />
+          </div>
+          <p class="note" id="story-status" role="status"></p>
+        </section>
+      </div>
+
+      <section class="how" id="how" data-chrome aria-labelledby="h-how">
+        <h2 id="h-how">How it grades</h2>
+        <p>
+          The model reads your answer and copies out which sentences are the Situation, the Task, the Action and the
+          Result. Then this page checks its work and does the counting. Three checks, one point each:
+        </p>
+        <ul>
+          <li><strong>Structure.</strong> All four parts are there, setup is under <span id="rule-setup">40%</span> of the words, and the action is at least <span id="rule-action">30%</span>.</li>
+          <li><strong>Evidence.</strong> A number, or a concrete outcome someone could check.</li>
+          <li><strong>Length.</strong> One to two minutes out loud, at an assumed <span id="rule-pace">150</span> words a minute.</li>
+        </ul>
+        <p>Three is Ready, two is Close, one or none is Rework. Every quote the model gives is checked against your answer, and a rewrite that uses a number you never wrote is thrown away.</p>
+        <p>
+          Your stories and your key stay in this browser. Your answer and your stories go to Anthropic, and nowhere
+          else, only when you press Grade. This page has no server, no account and no tracking.
+        </p>
+        <p>This is practice. It can tell you whether an answer is clear. It can't tell you whether you'll get the job.</p>
+      </section>
+    </main>
+
+    <footer class="site-foot" data-chrome>
+      <p>Built by <a href="https://dakshdua.ca">Daksh Dua</a> in Calgary. Not affiliated with Anthropic.</p>
+      <p>Free and open source. <a href="%REPO_URL%">Read the code</a>.</p>
+    </footer>
+  </body>
+</html>

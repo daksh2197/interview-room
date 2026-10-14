@@ -1,0 +1,16 @@
+{
+  "name": "Interview Room",
+  "short_name": "Interview Room",
+  "description": "A mock interviewer that asks one question at a time and grades your STAR answers.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111214",
+  "theme_color": "#111214",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

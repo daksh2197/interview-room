@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#111214"/>
+  <!-- four bars for Situation, Task, Action, Result. Action is the long one, in race orange. -->
+  <rect x="112" y="136" width="128" height="40" rx="12" fill="#EDE8DD" fill-opacity=".45"/>
+  <rect x="112" y="206" width="96" height="40" rx="12" fill="#EDE8DD" fill-opacity=".45"/>
+  <rect x="112" y="276" width="288" height="40" rx="12" fill="#FF5A1F"/>
+  <rect x="112" y="346" width="160" height="40" rx="12" fill="#3DDC84"/>
+</svg>

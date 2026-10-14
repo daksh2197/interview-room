@@ -58,3 +58,9 @@ describe('the lines under a grade', () => {
     for (const text of Object.values(PROBLEM_TEXT)) expect(text.length).toBeGreaterThan(10);
   });
 });
+
+describe('long lists', () => {
+  it('lists the first four numbers, then "and more"', () => {
+    expect(evidenceLine(report('We did 1 then 2 then 3 then 4 then 5.'))).toBe('Numbers in your answer: "1", "2", "3", "4" and more.');
+  });
+});

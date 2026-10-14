@@ -33,7 +33,8 @@ export function pct(share: number): string {
   return `${Math.min(100, Math.round(share * 100))}%`;
 }
 
-function list(items: readonly string[]): string {
+function list(items: readonly string[], more = false): string {
+  if (more) return `${items.join(', ')} and more`;
   if (items.length <= 1) return items.join('');
   return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
@@ -55,7 +56,7 @@ export function evidenceLine(report: Report): string {
   if (!ok) return 'No number and no concrete outcome. Say how it ended in a way someone could check.';
   if (numbers.length > 0) {
     const shown = numbers.slice(0, 4).map((n) => `"${n}"`);
-    return `Numbers in your answer: ${list(shown)}${numbers.length > 4 ? ' and more' : ''}.`;
+    return `Numbers in your answer: ${list(shown, numbers.length > 4)}.`;
   }
   return namedOutcome ? 'No number, but it names a concrete outcome. A number would make it stronger.' : '';
 }
@@ -98,7 +99,7 @@ export function tooShortText(words: number): string {
 
 export function inventedText(numbers: readonly string[]): string {
   const shown = numbers.slice(0, 4).map((n) => `"${n}"`);
-  return `The rewrite used ${numbers.length === 1 ? 'a number' : 'numbers'} you never wrote (${list(shown)}${numbers.length > 4 ? ' and more' : ''}), so it was thrown away. The grade above still stands.`;
+  return `The rewrite used ${numbers.length === 1 ? 'a number' : 'numbers'} you never wrote (${list(shown, numbers.length > 4)}), so it was thrown away. The grade above still stands.`;
 }
 
 export const EMPTY_REWRITE_TEXT = 'The model sent back no rewrite this time. The grade above still stands.';
