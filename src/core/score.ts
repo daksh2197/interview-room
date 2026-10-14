@@ -101,7 +101,8 @@ function findRuns(haystack: readonly string[], needle: readonly string[]): numbe
  * `claimed[i]` records which part owns word i. Parts are checked in STAR order, so if the
  * model files one sentence under two parts, the first one keeps it and the second gets nothing.
  */
-function checkParts(answer: string, grade: ModelGrade): Record<StarPart, PartReport> {
+function checkParts(answer: string, grade: ModelGrade): { parts: Record<StarPart, PartReport>; resultText: string } {
+  const raw = answer.split(/\s+/).filter((token) => /[\p{L}\p{N}]/u.test(token));
   const words = wordsOf(answer);
   const claimed: (StarPart | null)[] = words.map(() => null);
   const parts = {} as Record<StarPart, PartReport>;
@@ -125,26 +126,31 @@ function checkParts(answer: string, grade: ModelGrade): Record<StarPart, PartRep
       // Prefer an occurrence no other part has claimed yet.
       const free = starts.find((s) => needle.every((_, j) => claimed[s + j] === null || claimed[s + j] === part));
       const start = free ?? starts[0] ?? 0;
+      let gained = 0;
       for (let j = 0; j < needle.length; j++) {
         if (claimed[start + j] === null) {
           claimed[start + j] = part;
-          count++;
+          gained++;
         }
       }
-      if (!report.excerpts.some((e) => normalise(e) === normalise(excerpt))) report.excerpts.push(excerpt);
+      count += gained;
+      // An excerpt whose words all belong to an earlier part adds nothing to this one.
+      if (gained > 0 && !report.excerpts.some((e) => normalise(e) === normalise(excerpt))) report.excerpts.push(excerpt);
     }
     report.present = count > 0;
     report.share = words.length > 0 ? Math.min(1, count / words.length) : 0;
     parts[part] = report;
   }
-  return parts;
+  // The words the Result really owns, as written, for the evidence check.
+  const resultText = raw.filter((_, i) => claimed[i] === 'result').join(' ');
+  return { parts, resultText };
 }
 
 export function scoreAnswer(answer: string, grade: ModelGrade): Report {
   const words = countWords(answer);
   const seconds = speakingSeconds(answer);
 
-  const parts = checkParts(answer, grade);
+  const { parts, resultText } = checkParts(answer, grade);
 
   const missing = STAR_PARTS.filter((part) => !parts[part].present);
   const setupShare = Math.min(1, parts.situation.share + parts.task.share);
@@ -155,7 +161,7 @@ export function scoreAnswer(answer: string, grade: ModelGrade): Report {
   if (parts.action.present && actionShare < ACTION_MIN) issues.push('thin-action');
 
   // Evidence has to be in how it ended. A number in the setup ("Two years ago") is not evidence.
-  const numbers = parts.result.excerpts.flatMap((e) => numbersIn(e).map((n) => n.raw));
+  const numbers = numbersIn(resultText).map((n) => n.raw);
   const evidenceOk = numbers.length > 0 || grade.named_outcome;
 
   const verdict = lengthVerdict(seconds);

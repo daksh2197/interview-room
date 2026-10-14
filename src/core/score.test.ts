@@ -161,6 +161,17 @@ describe('scoreAnswer', () => {
     expect(report.evidence).toEqual({ ok: false, numbers: [], namedOutcome: false });
   });
 
+  it('finds no evidence in a result whose words all belong to the setup', () => {
+    const answer = 'Two years ago we had 300 open tickets. ' + words(30);
+    const sentence = 'Two years ago we had 300 open tickets.';
+    const report = scoreAnswer(answer, {
+      situation: [sentence], task: [], action: [], result: [sentence],
+      named_outcome: false, coaching: '', rewrite: '',
+    });
+    expect(report.parts.result).toMatchObject({ present: false, excerpts: [] });
+    expect(report.evidence).toEqual({ ok: false, numbers: [], namedOutcome: false });
+  });
+
   it('accepts a named outcome without a number as evidence', () => {
     const { answer, grade } = build({ s: words(10), t: words(10), a: words(30), r: 'They shipped it.' }, true);
     expect(scoreAnswer(answer, grade).evidence.ok).toBe(true);

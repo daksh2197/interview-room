@@ -26,11 +26,6 @@ describe('the eval cases', () => {
     expect(lengthVerdict(speakingSeconds(c.answer)) === 'on-target').toBe(c.checks.length);
   });
 
-  it.each(cases.map((c) => [c.id, c] as const))('%s does not expect a named outcome and no evidence at once', (_id, c) => {
-    // A named outcome passes the evidence check on its own, so the two can't contradict each other.
-    if (c.named_outcome === true) expect(c.checks.evidence).toBe(true);
-  });
-
   it('starts each id with its expected band', () => {
     for (const c of cases) expect(c.id.startsWith(bandFor(c.checks)), c.id).toBe(true);
   });

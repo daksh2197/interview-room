@@ -84,11 +84,11 @@ So the reply is checked twice: once by the API's constraint, once by `validateMo
 
 **Excerpts.** The answer and each excerpt are split into words, lower-cased, with quotes straightened and punctuation trimmed. An excerpt counts only if its words appear as a run of whole words in the answer, so "ed the export" can't match "fixed the export". Excerpts shorter than 2 words are ignored ("So" is in almost every answer). Anything not found is dropped, and the page says how many lines were dropped so nothing is hidden.
 
-**Each word counts once.** Parts are checked in STAR order, and each word of the answer belongs to the first part that claims it. If the model files one sentence under Situation and Result, Situation keeps it and Result gets nothing from it. That is how rule 2 is enforced in code, and it means the four shares can never add up to more than 100%.
+**Each word counts once.** Parts are checked in STAR order, and each word of the answer belongs to the first part that claims it. If the model files one sentence under Situation and Result, Situation keeps it and Result gets nothing from it. That is how rule 2 is enforced in code, and it means the four shares can never add up to more than 100% (the rounded figures on the bar can still show 101%).
 
-**Structure.** Pass when all four parts have at least one verified excerpt, setup (Situation plus Task) is at most 40% of the words (`SETUP_MAX`), and Action is at least 30% (`ACTION_MIN`). These are rules of thumb. Change them in `score.ts`; the page and the tests follow.
+**Structure.** Pass when all four parts own at least one word of the answer (a part whose only excerpt was already claimed by an earlier part counts as missing), setup (Situation plus Task) is at most 40% of the words (`SETUP_MAX`), and Action is at least 30% (`ACTION_MIN`). These are rules of thumb. Change them in `score.ts`; the page and the tests follow.
 
-**Evidence.** Pass when a verified Result excerpt has a number in it, or the model says the answer names a concrete outcome. Numbers are found by code, so the model can't miss one. Only the Result counts: "Two years ago" in the setup is not evidence of anything.
+**Evidence.** Pass when the words the Result owns include a number, or the model says the answer names a concrete outcome. Numbers are found by code, so the model can't miss one. Only the Result counts: "Two years ago" in the setup is not evidence of anything.
 
 **Length.** Pass when the estimated speaking time is 60 to 120 seconds at 150 words a minute (`WORDS_PER_MINUTE` in `speaking.ts`). That pace is a rule of thumb for calm speech, not a measurement of you.
 
@@ -128,7 +128,7 @@ plus a line for every failure saying which check disagreed. It exits with code 1
 
 The workflow for a prompt change: run the evals, change the prompt and bump `PROMPT_VERSION`, run them again, compare. Fewer passes means the change made grading worse, whatever it felt like.
 
-CI can't run the live evals (no key, and it would cost money on every push), so [`evals/cases.test.ts`](../evals/cases.test.ts) checks what can be checked without a model: every case is well-formed, every case expects the length its answer really has, no case expects a named outcome and failed evidence at once, and every band is covered. A case that expects the wrong thing makes every eval run lie, so this is worth a test.
+CI can't run the live evals (no key, and it would cost money on every push), so [`evals/cases.test.ts`](../evals/cases.test.ts) checks what can be checked without a model: every case is well-formed, every case expects the length its answer really has, and every band is covered. A case that expects the wrong thing makes every eval run lie, so this is worth a test.
 
 ## 6. What the evals caught during this build
 
