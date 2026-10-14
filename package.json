@@ -1,0 +1,38 @@
+{
+  "name": "interview-room",
+  "version": "1.0.0",
+  "description": "A mock interviewer that asks one question at a time and grades your STAR answers.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": "Daksh Dua (https://dakshdua.ca)",
+  "homepage": "https://daksh2197.github.io/interview-room",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/daksh2197/interview-room"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build && node scripts/stamp-sw.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "evals": "tsx evals/run.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  }
+}
