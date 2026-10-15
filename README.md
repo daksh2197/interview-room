@@ -106,7 +106,7 @@ src/
   ui/speech.ts       voice typing, where the browser has it
   main.ts            wires the page to the brain
 evals/
-  cases.json         11 sample answers and what each check should say
+  cases.json         12 sample answers and what each check should say
   run.ts             runs them against the live API: npm run evals
   evals.ts           reads the cases and scores a run, for both of the others
   cases.test.ts      what CI checks about the cases with no key
