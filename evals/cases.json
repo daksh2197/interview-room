@@ -50,6 +50,18 @@
       }
     },
     {
+      "id": "ready-data-ai",
+      "why": "Data and AI adoption story (dashboard trust), balanced, with numbers.",
+      "family": "data-ai",
+      "question": "Tell me about a time you got a sceptical team to trust a dashboard they had been ignoring.",
+      "answer": "At a regional logistics firm, the depot managers kept their own spreadsheets and ignored the weekly delivery dashboard, because its late-delivery figure never matched what they saw on the floor. I was the analyst who owned the dashboard, and my job was to make it something they would open on Monday mornings instead of arguing with. I sat with three managers and traced their numbers against ours, and found that the dashboard counted a parcel as late from the promised hour while they counted from the dock slot. Neither was wrong, but nobody had written the difference down. I added a one-line definition under every figure, let each depot choose its own view, and asked the managers to review the changes before anything went out. I also posted a short note every Friday listing which figures had changed and why. Within two months the spreadsheets stopped circulating and eleven of the twelve depot managers were opening the dashboard weekly. The late-delivery dispute that used to take up the Monday call disappeared, and the operations director asked me to build the same view for the warehouses.",
+      "checks": {
+        "structure": true,
+        "evidence": true,
+        "length": true
+      }
+    },
+    {
       "id": "close-short",
       "why": "Complete and specific, but about 30 seconds. Length should fail.",
       "family": "solutions-engineer",

@@ -19,7 +19,7 @@ Interview prep usually means reading a list of fifty questions and nodding. That
 
 ## What it does
 
-- **Asks one question at a time.** Forty questions across five role families: general behavioural, technical account manager, customer success, solutions engineer, and race or trackside engineer. No repeats until you've had all eight in a set.
+- **Asks one question at a time.** Forty-eight questions across six role families: general behavioural, technical account manager, customer success, solutions engineer, race or trackside engineer, and data and AI adoption. No repeats until you've had all eight in a set.
 - **Times your answer as you type.** Words become an estimated speaking time, with the one-to-two-minute window marked on a bar.
 - **Grades three things.** Structure (are all four STAR parts there, and in proportion), evidence (a number in how it ended, or a concrete outcome) and length. Three passes is Ready, two is Close, one or none is Rework.
 - **Gives you one fix and a tighter version.** The rewrite may only use facts you wrote. If it contains a number you never wrote, it is thrown away and you see the grade without it.
@@ -47,7 +47,7 @@ code:   check every copied sentence is really in the answer (drop it if not)
         throw the rewrite away if it has a number you never wrote
 ```
 
-The model's reply is forced into a JSON schema by the API, then checked again on arrival. The prompt lives in code with a version number, and an eval set of 11 sample answers says whether a prompt change made grading better or worse.
+The model's reply is forced into a JSON schema by the API, then checked again on arrival. The prompt lives in code with a version number, and an eval set of 12 sample answers says whether a prompt change made grading better or worse.
 
 ![On a laptop: the demo round graded Ready, with each STAR part's share of the answer and the three checks](docs/screenshots/desktop.png)
 
@@ -96,7 +96,7 @@ src/
     numbers.ts       the "no invented numbers" check
     grade.ts         the pipeline, start to finish, with send() passed in
     speaking.ts      words to speaking time
-    questions.ts     the 40 questions and the no-repeat rule
+    questions.ts     the 48 questions and the no-repeat rule
     stories.ts       the story bank, export and import
     demo.ts          the scripted demo round
     words.ts         every sentence the grader writes

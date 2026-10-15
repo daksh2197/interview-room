@@ -98,13 +98,14 @@ So the reply is checked twice: once by the API's constraint, once by `validateMo
 
 A unit test checks code against an answer you know. An eval checks a prompt against answers where you know what a good grade looks like. The model is not deterministic, so the question an eval answers is "how often does this prompt get it right", not "is it right".
 
-[`evals/cases.json`](../evals/cases.json) holds 11 sample answers, all invented. Each says what the three checks should come out as:
+[`evals/cases.json`](../evals/cases.json) holds 12 sample answers, all invented. Each says what the three checks should come out as:
 
 | Case | Structure | Evidence | Length | Band |
 | --- | --- | --- | --- | --- |
 | ready-renewal | pass | pass | pass | Ready |
 | ready-named-outcome | pass | pass | pass | Ready |
 | ready-trackside-data | pass | pass | pass | Ready |
+| ready-data-ai | pass | pass | pass | Ready |
 | ready-migration | pass | pass | pass | Ready |
 | close-short | pass | pass | fail | Close |
 | close-no-evidence | pass | fail | pass | Close |

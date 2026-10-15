@@ -36,7 +36,7 @@ A hosted key for a short window. Pay once, grade as many answers as you like for
 Sets of questions written for one role family, with notes on what each question is really testing. Imported as a file, like the story bank.
 
 - **Price to test:** a few dollars a pack.
-- **What has to be true:** the free 40 questions get people started, and they want more depth for the specific role they're going for.
+- **What has to be true:** the free 48 questions get people started, and they want more depth for the specific role they're going for.
 - **Cost to deliver:** writing time. No code beyond an import format for questions.
 - **Why it might go first:** it needs no server and no running costs.
 

@@ -4,7 +4,7 @@ import { isRoleFamily, nextQuestion, QUESTIONS, questionsFor, ROLE_FAMILIES } fr
 describe('the question bank', () => {
   it('has every role family the spec asks for', () => {
     expect(ROLE_FAMILIES.map((f) => f.id).sort()).toEqual(
-      ['behavioural', 'customer-success', 'solutions-engineer', 'tam', 'trackside'].sort(),
+      ['behavioural', 'customer-success', 'data-ai', 'solutions-engineer', 'tam', 'trackside'].sort(),
     );
   });
 

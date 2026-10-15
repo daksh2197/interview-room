@@ -5,7 +5,7 @@
  * interview guide, and none pretends to come from a real interviewer.
  */
 
-export type RoleFamily = 'tam' | 'customer-success' | 'solutions-engineer' | 'trackside' | 'behavioural';
+export type RoleFamily = 'tam' | 'customer-success' | 'solutions-engineer' | 'trackside' | 'behavioural' | 'data-ai';
 
 export interface Question {
   /** Stable id, e.g. "tam-3". Used to remember which questions you've had. */
@@ -20,6 +20,7 @@ export const ROLE_FAMILIES: readonly { id: RoleFamily; label: string }[] = [
   { id: 'customer-success', label: 'Customer success' },
   { id: 'solutions-engineer', label: 'Solutions engineer' },
   { id: 'trackside', label: 'Race or trackside engineer' },
+  { id: 'data-ai', label: 'Data and AI adoption' },
 ];
 
 const BANK: Record<RoleFamily, readonly string[]> = {
@@ -72,6 +73,16 @@ const BANK: Record<RoleFamily, readonly string[]> = {
     'Tell me about a time you worked to a deadline that could not move.',
     'Describe a time you disagreed with a senior colleague about a technical call.',
     'Tell me about a time you improved a process by measuring it first.',
+  ],
+  'data-ai': [
+    'Tell me about a time you got a sceptical team to trust a dashboard they had been ignoring.',
+    'Describe a time a metric disagreed with what a senior leader felt was true. How did you handle it?',
+    'Walk me through how you would roll out an AI assistant to staff who do not want it.',
+    'Tell me about a time you tried to show whether a new tool really saved people time. What did you measure, and what did you find?',
+    'Describe a time you discovered a data quality problem after people had already acted on the numbers.',
+    'Tell me about explaining what a model cannot do to someone who wanted it to do more.',
+    'Imagine staff want to paste customer details into an AI tool to work faster. How would you handle the privacy and consent questions?',
+    'Tell me about a time you decided a task should stay manual, or that a tool should not be used. How did you make the case?',
   ],
 };
 
